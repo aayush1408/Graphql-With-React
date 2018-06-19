@@ -8,7 +8,8 @@ const {GraphQLObjectType,
     GraphQLSchema,
     GraphQLID,
     GraphQLInt,
-    GraphQLList
+    GraphQLList,
+    GraphQLNonNull
     } = graphql;
 
 
@@ -21,6 +22,7 @@ const BookType = new GraphQLObjectType({
         author:{
             type:AuthorType,
             resolve(parent,args){
+                return Author.findById(parent.authorId);                
         }
     }
     })
@@ -35,6 +37,7 @@ const AuthorType = new GraphQLObjectType({
         books: {
             type:new GraphQLList(BookType),
             resolve(parent,args){
+                return Book.find({ authorId: parent.id });                
             }
         }
     })
@@ -48,24 +51,26 @@ const RootQuery = new GraphQLObjectType({
             args:{id:{type:GraphQLID}},
             resolve(parent,args){
                 //code to get data
+                return Book.findById(args.id);
             }
         },
         author:{
             type:AuthorType,
             args:{id:{type:GraphQLID}},
             resolve(parent,args){
+                return Author.findById(args.id);
             }
         },
         books: {
             type: new GraphQLList(BookType),
             resolve(parent, args){
-                return books;
+                return Book.find({});
             }
         },
         authors: {
             type: new GraphQLList(AuthorType),
             resolve(parent, args){
-                return authors;
+                return Author.find({});
             }
         }
     
@@ -92,9 +97,9 @@ const Mutation = new GraphQLObjectType({
         addBook:{
             type:BookType,
             args:{
-                name:{type : GraphQLString},
-                genre:{type : GraphQLString},
-                authorId:{type :GraphQLID}
+                name:{type : new GraphQLNonNull(GraphQLString)},
+                genre:{type : new GraphQLNonNull(GraphQLString)},
+                authorId:{type :new GraphQLNonNull(GraphQLID)}
             },
             resolve(parent,args){
                 let book = new Book({
